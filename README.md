@@ -71,16 +71,6 @@ Cómo utilizar el vídeo:
 - Recomendado: sigue el vídeo con la UI de n8n abierta para identificar cada nodo y sus parámetros.
 - Si vas a probar en tu entorno, usa cuentas de prueba (Google / Telegram) y no actives el workflow en producción hasta verificarlo.
 
-Timestamps sugeridos (¿quieres que extraiga los tiempos exactos?):
-
-- 00:00 — Introducción y objetivo del sistema
-- 00:45 — Envío de mensaje desde Telegram
-- 01:10 — Procesamiento por el AI Agent
-- 01:50 — Creación de un evento en Google Calendar
-- 02:30 — Consulta en Google Sheets y envío de correo
-- 03:10 — Eliminación de evento y confirmación final
-
-Si quieres que extraiga los timestamps exactos y los inserte con enlaces directos, dime y lo hago.
 
 Nota de privacidad: el vídeo puede mostrar IDs o datos de ejemplo; si vas a compartir el enlace públicamente, asegúrate de que los datos sensibles estén anonimizados.
 
