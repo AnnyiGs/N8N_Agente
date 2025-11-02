@@ -76,7 +76,7 @@ Nota de privacidad: el vídeo puede mostrar IDs o datos de ejemplo; si vas a com
 
 ## 🛠️ Instalación (rápida)
 
-1. Descarga el archivo JSON del workflow (por ejemplo `codigo.txt` o el `.json` exportado) desde este repositorio.
+1. Descarga el archivo JSON del workflow (el `.json` exportado) desde este repositorio.
 2. En la interfaz de n8n: Workflows → Import from file → selecciona el JSON descargado.
 3. Configura las credenciales necesarias (Telegram, Google, OpenAI) en la UI de n8n antes de activar el workflow.
 
