@@ -1,125 +1,56 @@
-# N8N_Agente — Documentación del workflow
+# 🤖 Agente Inteligente de Negocios – Asistente Virtual con Telegram
 
-Este repositorio contiene una exportación (JSON) de un workflow de n8n que implementa un "AI Agent" conectado a Telegram, Google Calendar, Gmail y Google Sheets para automatizar tareas comunes: crear/consultar/actualizar/borrar eventos del calendario, enviar correos y consultar hojas de cálculo.
+## ✨ Descripción
 
-## Resumen funcional
+Este proyecto es un **asistente virtual automatizado** que funciona a través de **Telegram**, diseñado para **facilitar y optimizar la gestión diaria de tu negocio** usando **Inteligencia Artificial**.
 
-El flujo principal recibe mensajes desde Telegram, los envía a un agente AI (integrado con LangChain y un modelo OpenAI) que decide qué acción ejecutar usando herramientas (tools). Las acciones soportadas incluyen:
-
-- Crear eventos en Google Calendar.
-- Obtener eventos (consulta de rango) en Google Calendar.
-- Eliminar eventos en Google Calendar.
-- Enviar correos por Gmail.
-- Consultar filas en varias hojas de Google Sheets (Insumos, ChocolatesYCaramelos, Contactos).
-- Responder al usuario por Telegram con texto de salida del agente.
-
-## Lista de nodos y propósito
-
-A continuación se describe cada nodo exportado en `codigo.txt` y su propósito:
-
-- `Telegram Trigger` (nodo: n8n-nodes-base.telegramTrigger)
-	- Propósito: Recibe updates (mensajes) desde un bot de Telegram y desencadena el workflow.
-	- Entradas: mensajes de usuarios (texto, chat id, metadata).
-	- Salidas: payload con `message` usado por el `AI Agent`.
-	- Credenciales: requiere configurar una `Telegram Api` (bot token).
-
-- `AI Agent` (nodo: @n8n/n8n-nodes-langchain.agent)
-	- Propósito: Orquestrar la conversión del texto del usuario en acciones concretas (tools) usando un prompt y un LLM.
-	- Usa herramientas (ai_tool) para ejecutar operaciones sobre Calendar, Gmail, Sheets.
-	- Importante: el prompt actual contiene instrucciones y pide al agente generar campos como `Start`, `End`, `Event_ID`, `Summary`, etc. Estos valores se inyectan directamente a nodos que realizan cambios.
-
-- `OpenAI Chat Model` (nodo: @n8n/n8n-nodes-langchain.lmChatOpenAi)
-	- Propósito: Conector hacia el modelo OpenAI (aquí configurado como `gpt-4.1-mini`).
-	- Credenciales: `OpenAI API`.
-	- Recomendación: ajustar temperatura y parámetros para reducir hallucinations.
-
-
-- `Create an event in Google Calendar` (nodo: n8n-nodes-base.googleCalendarTool)
-	- Operación: crear evento.
-	- Parámetros inyectados desde el agente: `Start`, `End`, `Summary`.
-	- Credenciales: `googleCalendarOAuth2Api`.
-	- Riesgo: si los valores vienen sin validar, pueden crear eventos con fechas inválidas o duplicadas.
-
-- `Get many events in Google Calendar` (nodo: n8n-nodes-base.googleCalendarTool)
-	- Operación: obtener eventos (getAll), con parámetros `timeMin` y `timeMax` inyectados por el agente.
-
-- `Delete an event in Google Calendar` (nodo: n8n-nodes-base.googleCalendarTool)
-	- Operación: delete.
-	- Parámetro: `eventId` obtenido del agente.
-	- Riesgo crítico: borrados involuntarios si no hay confirmación ni validación del `eventId`.
-
-- `Send a message in Gmail` (nodo: n8n-nodes-base.gmailTool)
-	- Operación: enviar correo (To, Subject, Message) desde valores devueltos por el agente.
-	- Credenciales: `gmailOAuth2`.
-
-- `Get row(s) in sheet in Google Sheets` (varios nodos)
-	- Propósito: consultar filas en hojas de cálculo específicas (IDs de documento visibles en la exportación).
-	- Uso: recuperar datos de inventario, contactos, etc., que el agente puede usar para responder o tomar decisiones.
-
-- `Send a text message` (nodo: n8n-nodes-base.telegram)
-	- Propósito: enviar la respuesta final del agente al chat de Telegram.
-
-## Requisitos y configuración inicial
-
-1. Instalar y correr n8n (self-hosted o n8n.cloud). Versión compatible: la exportación usa nodos LangChain; preferible n8n v0.210+ (ver compatibilidad con tu instalación).
-2. Importar el workflow JSON (el contenido de `codigo.txt`) en la UI de n8n: Workflows > Import from file.
-3. Configurar credenciales en n8n:
-	 - Telegram API (bot token) — para `Telegram Trigger` y `Send a text message`.
-	 - OpenAI API — para `OpenAI Chat Model`.
-	 - Google OAuth2 (Calendar, Sheets, Gmail) — para los nodos de Google. Crear credenciales con el alcance mínimo necesario.
-4. Revisar y, si procede, reemplazar las IDs de hojas de cálculo y el correo del calendario por cuentas de prueba durante el desarrollo.
-
-## Cómo probar (flujo mínimo)
-
-1. En Telegram, envía un mensaje al bot (ej. "Crear evento reunión mañana 10am 1h tema: seguimiento").
-2. `Telegram Trigger` recibe el mensaje y lo envía a `AI Agent`.
-3. `AI Agent` decide la acción (crear evento) y devuelve los campos esperados.
-4. Si todo está correcto, el nodo `Create an event in Google Calendar` ejecuta la creación y el bot responde con confirmación.
-
-Para pruebas seguras: usa cuentas de Google de testing y un chat privado de Telegram.
-
-## Riesgos y recomendaciones de seguridad (priorizadas)
-
-1. Validación y normalización de salidas del agente
-	 - Implementar nodos `Function` o `Set` entre el `AI Agent` y los nodos que realizan acciones para validar fechas (ISO 8601), `eventId` y direcciones de correo.
-2. Confirmación para operaciones destructivas
-	 - Agregar un paso de confirmación (p. ej. enviar resumen al usuario y esperar respuesta afirmativa) antes de ejecutar `Delete an event`.
-3. Registro / Auditoría
-	 - Registrar en Google Sheets (o un sistema de logs) cada acción que modifica estado: timestamp, usuario, acción, inputs y respuesta.
-4. Limitar el poder del agente
-	 - En el prompt del `AI Agent`, exigir respuestas en un esquema JSON estricto y limitar campos que puede generar.
-5. Ajustar parámetros del modelo
-	 - Bajar temperatura y usar prompts con instrucciones claras para reducir hallucinations.
-
-## Mejoras sugeridas (implementaciones recomendadas)
-
-- Añadir un nodo `Function` que valide `Start`/`End` antes de `Create an event` (normalizar a ISO).
-- Añadir un `If` y flujo de confirmación antes de ejecutar `Delete an event`.
-- Añadir un nodo para escribir un registro en una hoja de Google Sheets después de cada operación crítica.
-- Implementar manejo de errores con `Error Trigger` y notificaciones por Telegram en caso de fallo.
-- Comprobar idempotencia: antes de crear, buscar eventos similares para evitar duplicados.
-
-## Detalles de privacidad
-
-- El workflow puede contener referencias a correos, IDs de documentos y URLs. No publiques esta exportación completa en repositorios públicos sin eliminar o anonimizar esas referencias.
-- Revisa la política de retención de datos si usas `Simple Memory` para almacenar conversaciones; evita guardar información sensible por defecto.
-
-## Despliegue
-
-- En entornos de producción, usa n8n con HTTPS y almacena credenciales en la configuración segura del servicio.
-- Limita el alcance OAuth de las cuentas Google (por ejemplo, solo Calendar y Sheets si no necesitas Gmail).
-
-## Pasos siguientes (opciones que puedo implementar)
-
-1. Añadir validación automática de fechas y normalización en el workflow y entregarte el JSON modificado.
-2. Insertar confirmación previa a borrados y registrar auditoría en Google Sheets.
-3. Generar un README más corto u otro formato (md, txt) o documentar paso a paso cómo importar y probar.
-
-Di cuál opción prefieres y la implementaré (puedo generar el JSON modificado con nodos de validación/confirmación y un ejemplo de registro). 
+El asistente entiende instrucciones en lenguaje natural y realiza tareas automáticamente, sin necesidad de cambiar entre aplicaciones o plataformas.
 
 ---
 
-Archivo fuente del workflow: `codigo.txt` (exportación JSON). Revisa las credenciales en la UI de n8n antes de activar el workflow.
+## 🚀 Funcionalidades Principales
+
+- 📅 **Gestión de Eventos en Google Calendar**  
+  Crea, modifica y elimina citas, reuniones y recordatorios de forma rápida y sencilla, asegurando que nunca se pierdan compromisos importantes.
+
+- ✉️ **Envío de Correos Electrónicos**  
+  Redacta y envía correos de confirmación, avisos o notificaciones directamente desde la conversación en Telegram.
+
+- 📊 **Conexión con Hojas de Cálculo (Google Sheets)**  
+  Registra pedidos, consulta información y actualiza datos en tablas de control, facilitando el seguimiento de las operaciones del negocio.
+
+---
+
+## 💡 Beneficios
+
+- ⏱️ **Ahorro de tiempo:** Todas las tareas se realizan desde un único lugar.  
+- ✅ **Reducción de errores:** La automatización minimiza olvidos o inconsistencias en los registros.  
+- 📈 **Eficiencia y control:** Mantén un seguimiento organizado de eventos, pedidos y comunicaciones con clientes.  
+- 🎯 **Experiencia moderna y sencilla:** Interactúa de forma natural con el asistente, sin curva de aprendizaje complicada.
+
+---
+
+## 🎯 Objetivo
+
+Brindar una solución práctica y moderna para la gestión de actividades del negocio, **mejorando la productividad**, **facilitando la comunicación** y **simplificando la organización interna**.
+
+---
+
+## 💬 Cómo funciona
+
+1. El usuario envía un mensaje o comando por **Telegram**.  
+2. El asistente interpreta la intención usando **Inteligencia Artificial**.  
+3. Se realizan las acciones correspondientes:
+   - Crear, modificar o eliminar eventos.  
+   - Enviar correos electrónicos.  
+   - Consultar o actualizar datos en hojas de cálculo.  
+4. El asistente confirma la acción al usuario de forma clara y rápida.
+
+---
+
+## 🎉 Resultado
+
+Un sistema **moderno, intuitivo y eficiente**, que centraliza la gestión de tu negocio en un solo lugar, ayudándote a **ahorrar tiempo**, **mantener todo organizado** y **mejorar la comunicación con tu equipo y clientes**.
 
 ## Demostración en vídeo
 
