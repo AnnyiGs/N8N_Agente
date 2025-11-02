@@ -71,6 +71,11 @@ Cómo utilizar el vídeo:
 - Recomendado: sigue el vídeo con la UI de n8n abierta para identificar cada nodo y sus parámetros.
 - Si vas a probar en tu entorno, usa cuentas de prueba (Google / Telegram) y no actives el workflow en producción hasta verificarlo.
 
+## 🖼️ Captura del tablero n8n
+
+Una imagen del tablero de n8n que muestra el circuito del workflow (nodos y conexiones). Úsala como referencia visual para ubicar los nodos dentro de la UI.
+
+![Tablero n8n — circuito del workflow](referencias/N8N_conextion.png)
 
 Nota de privacidad: el vídeo puede mostrar IDs o datos de ejemplo; si vas a compartir el enlace públicamente, asegúrate de que los datos sensibles estén anonimizados.
 
