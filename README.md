@@ -74,3 +74,13 @@ Cómo utilizar el vídeo:
 
 Nota de privacidad: el vídeo puede mostrar IDs o datos de ejemplo; si vas a compartir el enlace públicamente, asegúrate de que los datos sensibles estén anonimizados.
 
+## 🛠️ Instalación (rápida)
+
+1. Descarga el archivo JSON del workflow (por ejemplo `codigo.txt` o el `.json` exportado) desde este repositorio.
+2. En la interfaz de n8n: Workflows → Import from file → selecciona el JSON descargado.
+3. Configura las credenciales necesarias (Telegram, Google, OpenAI) en la UI de n8n antes de activar el workflow.
+
+Eso es todo — la importación es directa y el workflow quedará disponible en tu lista de Workflows.
+
+
+
